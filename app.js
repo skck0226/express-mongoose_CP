@@ -12,10 +12,9 @@ app.use(bodyParser.json());
 
 //mongodb connect
 const db = 	mongoose.connection;
-db.on('error',console.error);
+db.on('error',console.error);	
 db.once('open',()=>console.log('connected to mongodb server'));
 mongoose.connect('mongodb://localhost/mongodb_tutorial');
-//db model
 
 const Goal = require('./models/goal');
 
@@ -25,6 +24,12 @@ const usersRoute = require('./routes/users');
 app.use('/goals',goalsRoute);
 app.use('/users',usersRoute);
 
+app.get('/',(req,res)=>{
+	res.json('home');
+})
+app.get('/about',(req,res)=>{
+	res.json('About');
+})
 
 app.listen(3000,(req,res)=>{
 	console.log(`server 3000`);
