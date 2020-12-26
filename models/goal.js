@@ -2,11 +2,22 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const goalSchema = new Schema({
-	name:{
-		default:"sinki",
+	title:{
 		type:String,
+		required:true
 	},
-	content:String
+	details:{
+		type:String,
+		required:true	
+	},
+	user:{
+		type:String,
+		required:true
+	},
+	date:{
+		type:Date,
+		default:Date.now,
+	}
 });
 
 module.exports = mongoose.model('goal',goalSchema);

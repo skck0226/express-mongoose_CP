@@ -1,56 +1,53 @@
 const express = require('express');
-const app = express();
 const mongoose = require('mongoose');
 const router = express.Router();
+const {ensureAuthenticated} = require('../helpers/auth');
+
 const Goal= require('../models/goal');
-router.get('/',(req,res)=>{
-	Goal.find((err,goals)=>{
-		if(err){
-			console.error(err);
-			return ;	
-		}
-		res.json(goals);
-	})
+
+router.get('/',ensureAuthenticated,(req,res)=>{
+	Goal.find({user:req.user.id})
+		.then(goals =>{
+			res.render('goals/goalsList',{
+				goals:goals
+			})
+		})
 })
-router.post('/',(req,res)=>{
-	const goal = new Goal();
-	goal.id = req.body.id;
-	goal.name = req.body.name;
-	goal.content = req.body.content;
-	goal.save((err)=>{
-		if(err){
-			console.error(err);
-			res.json({result:0});
-			return;
-		}
-		res.json({result:1});
-	})
+router.get('/add', ensureAuthenticated, (req,res)=>{
+	res.render('goals/add');
 })
-router.put('/:goal_id',(req,res)=>{
-	Goal.findById(req.params.goal_id, (err,goal)=>{
-		if(err)	return res.status(500).json({ error: 'database failure' });
-		if(!goal) return res.status(404).json({ error: 'goal not found' });
-		
-		goal.name = req.body.name;
-		goal.content = req.body.content;
-		
-		goal.save(err=>{
-			if(err) res.status(500).json({error: 'failed to update'});
-			res.json(goal);
-		});
-	})
+router.get('/edit/:goal_id',ensureAuthenticated,(req,res)=>{
+	Goal.findeOne({_id:req.params.id})
+		.then( goal => {
+			res.render('goals/edit',{goal:goal})
+		})
 })
-router.get('/:goal_id',(req,res)=>{
-	Goal.findById(req.params.goal_id, (err,goal)=>{
-		if(err)	return res.status(500).json({ error: 'database failure' });
-		if(!goal) return res.status(404).json({ error: 'goal not found' });
-		res.json(goal);
-	})
-})
-router.delete('/:goal_id',(req,res)=>{
-	Goal.remove({_id:req.params.goal_id},(err)=>{
-		if(err) res.status(500).json({error: 'database failure'});
-        res.json({ message: "book deleted" });
+router.post('/',ensureAuthenticated,(req,res)=>{
+	const goal = new Goal({
+		title: req.body.title,
+		details: req.body.details,
+		user: req.user.id
 	});
+	goal.save()
+		.then( (goal)=>{
+			res.redirect('/goals');
+		})
+})
+router.put('/:goal_id',ensureAuthenticated,(req,res)=>{
+	Goal.findOne({_id:req.params.goal_id})
+		.then((goal)=>{
+			goal.title = req.body.title;
+			goal.detail = req.body.detail;
+			goal.save()
+				.then(goal=>{
+					res.redirect('/');
+				})
+		})
+})
+router.delete('/:goal_id',ensureAuthenticated,(req,res)=>{
+	Goal.remove({_id:req.params.goal_id})
+		.then(goal=>{
+			res.redirect('/');
+		})
 })
 module.exports = router;
